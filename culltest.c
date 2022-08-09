@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
     int last_vbl_count = -1;
     printf("done initializing\n");
     for (;;) {
-        bool up = false, down = false;
+        bool btn_b = false, btn_a = false;
 
         maple_device_t *cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
         if (cont) {
@@ -165,10 +165,10 @@ int main(int argc, char **argv) {
                 printf("user requested exit by pressing start on controller 0\n");
                 break;
             }
-            if (stat->buttons & CONT_DPAD_UP)
-                up = true;
-            if (stat->buttons & CONT_DPAD_DOWN)
-                down = true;
+            if (stat->buttons & CONT_B)
+                btn_b = true;
+            if (stat->buttons & CONT_A)
+                btn_a = true;
         }
 
         int vbl_count = pvr_get_vbl_count();
@@ -177,9 +177,9 @@ int main(int argc, char **argv) {
             last_vbl_count = vbl_count;
 
             float zdelta = 0.0f;
-            if (up)
+            if (btn_b)
                 zdelta += 1.0f / 30.0f;
-            if (down)
+            if (btn_a)
                 zdelta -= 1.0f / 30.0f;
 
             translation[2] += zdelta;
