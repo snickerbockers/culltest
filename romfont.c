@@ -235,7 +235,7 @@ void font_tex_render_char(pvr_ptr_t tex, char ch, unsigned xpos, unsigned ypos) 
         xpos * GLYPH_WIDTH,
         ypos * GLYPH_HEIGHT,
         (xpos + 1) * GLYPH_WIDTH,
-        (ypos + 1) * GLYPH_WIDTH
+        (ypos + 1) * GLYPH_HEIGHT
     };
 
     pvr_vertex_t quad[] = {
