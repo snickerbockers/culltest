@@ -64,41 +64,18 @@ static void perspective_mat(float ret_mat[16], float fovy, float aspect,
 
 static void
 mat_mult(float mat_out[16], float const lhs[16], float const rhs[16]) {
-    mat_out[0] = lhs[0] * rhs[0] + lhs[1] * rhs[4] +
-        lhs[2] * rhs[8] + lhs[3] * rhs[12];
-    mat_out[1] = lhs[0] * rhs[1] + lhs[1] * rhs[5] +
-        lhs[2] * rhs[9] + lhs[3] * rhs[13];
-    mat_out[2] = lhs[0] * rhs[2] + lhs[1] * rhs[6] +
-        lhs[2] * rhs[10] + lhs[3] * rhs[14];
-    mat_out[3] = lhs[0] * rhs[3] + lhs[1] * rhs[7] +
-        lhs[2] * rhs[14] + lhs[3] * rhs[15];
-    mat_out[4] = lhs[4] * rhs[0] + lhs[5] * rhs[4] +
-        lhs[6] * rhs[8] + lhs[7] * rhs[12];
-    mat_out[5] = lhs[4] * rhs[1] + lhs[5] * rhs[5] +
-        lhs[6] * rhs[9] + lhs[7] * rhs[13];
-    mat_out[6] = lhs[4] * rhs[2] + lhs[5] * rhs[6] +
-        lhs[6] * rhs[10] + lhs[7] * rhs[14];
-    mat_out[7] = lhs[4] * rhs[3] + lhs[5] * rhs[7] +
-        lhs[6] * rhs[14] + lhs[7] * rhs[15];
-    mat_out[8] = lhs[8] * rhs[0] + lhs[9] * rhs[4] +
-        lhs[10] * rhs[8] + lhs[11] * rhs[12];
-    mat_out[9] = lhs[8] * rhs[1] + lhs[9] * rhs[5] +
-        lhs[10] * rhs[9] + lhs[11] * rhs[13];
-    mat_out[10] = lhs[8] * rhs[2] + lhs[9] * rhs[6] +
-        lhs[10] * rhs[10] + lhs[11] * rhs[14];
-    mat_out[11] = lhs[8] * rhs[3] + lhs[9] * rhs[7] +
-        lhs[10] * rhs[14] + lhs[11] * rhs[15];
-    mat_out[12] = lhs[12] * rhs[0] + lhs[13] * rhs[4] +
-        lhs[14] * rhs[8] + lhs[15] * rhs[12];
-    mat_out[13] = lhs[12] * rhs[1] + lhs[13] * rhs[5] +
-        lhs[14] * rhs[9] + lhs[15] * rhs[13];
-    mat_out[14] = lhs[12] * rhs[2] + lhs[13] * rhs[6] +
-        lhs[14] * rhs[10] + lhs[15] * rhs[14];
-    mat_out[15] = lhs[12] * rhs[3] + lhs[13] * rhs[7] +
-        lhs[14] * rhs[14] + lhs[15] * rhs[15];
+    unsigned lhs_row, rhs_col, idx;
+    for (lhs_row = 0; lhs_row < 4; lhs_row++) {
+        for (rhs_col = 0; rhs_col < 4; rhs_col++) {
+            float sum = 0;
+            for (idx = 0; idx < 4; idx++)
+                sum += lhs[lhs_row * 4 + idx] * rhs[idx * 4 + rhs_col];
+            mat_out[lhs_row * 4 + rhs_col] = sum;
+        }
+    }
 }
 
-static void ident_mat(float mat[16]) {
+__attribute__((unused)) static void ident_mat(float mat[16]) {
     mat[0]  = 1.0f; mat[1]  = 0.0f; mat[2]  = 0.0f; mat[3]  = 0.0f;
     mat[4]  = 0.0f; mat[5]  = 1.0f; mat[6]  = 0.0f; mat[7]  = 0.0f;
     mat[8]  = 0.0f; mat[9]  = 0.0f; mat[10] = 1.0f; mat[11] = 0.0f;
@@ -117,12 +94,20 @@ static inline float dot4(float const v1[4], float const v2[4]) {
 }
 
 static void
-transform_vec(float vec_out[4],
+mat_vec_mult(float vec_out[4],
               float const mat[16], float const vec_in[4]) {
     vec_out[0] = dot4(mat, vec_in);
     vec_out[1] = dot4(mat + 4, vec_in);
     vec_out[2] = dot4(mat + 8, vec_in);
     vec_out[3] = dot4(mat + 12, vec_in);
+}
+
+static void init_proj_mat(float proj[16]) {
+    float offset[4] = { 320.0f, 240.0f, 0.0f, 1.0f };
+    float offset_mat[16], persp_mat[16];
+    trans_mat(offset_mat, offset);
+    perspective_mat(persp_mat, 90.0f, 640.0f / 480.0f, 0.1f, 10.0f);
+    mat_mult(proj, offset_mat, persp_mat);
 }
 
 int main(int argc, char **argv) {
@@ -131,22 +116,19 @@ int main(int argc, char **argv) {
     pvr_vertex_t verts[] = {
         {
             .flags = PVR_CMD_VERTEX,
-            /* .x = 0.0f, .y = 320.0f, .z = 10.0f, */
             .argb = 0xffff0000
         },
         {
             .flags = PVR_CMD_VERTEX,
-            /* .x = 320.0f, .y = 0, .z = 10.0f, */
             .argb = 0xff00ff00
         },
         {
             .flags = PVR_CMD_VERTEX,
-            /* .x = 640, .y = 320.0f, .z = 10.0f, */
             .argb = 0xff0000ff
         },
         {
             .flags = PVR_CMD_VERTEX_EOL,
-            .argb = 0xffffffff//, /* .x = 640.0f,  */.y=0.0f, .z=10.0f
+            .argb = 0xffffffff
         }
     };
 
@@ -159,20 +141,17 @@ int main(int argc, char **argv) {
     pvr_poly_cxt_col(&poly_ctxt, PVR_LIST_OP_POLY);
     pvr_poly_compile(&poly_hdr, &poly_ctxt);
 
-    float mat[16], proj[16], trans[16];
-    float disp[4] = { 320.0f, 240.0f, 0.0f, 1.0f };
-    trans_mat(trans, disp);
-    perspective_mat(proj, 90.0f, 640.0f / 480.0f, 0.1f, 10.0f);
-    mat_mult(mat, trans, proj);
-    /* ident_mat(mat); */
-    float points_orig[4][4] = {
-        { -320.0f, 0.0f, 2.0f, 1.0f },
-        { 0.0f, -320.0f, 2.0f, 1.0f },
-        { 320.0f, 0.0f, 2.0f, 1.0f },
-        { -320.0f, -320.0f, 2.0f, 1.0f }
+    float projection[16];
+    init_proj_mat(projection);
+
+    float mesh[4][4] = {
+        { -320.0f, 0.0f, 0.0f, 1.0f },
+        { 0.0f, -320.0f, 0.0f, 1.0f },
+        { 320.0f, 0.0f, 0.0f, 1.0f },
+        { -320.0f, -320.0f, 0.0f, 1.0f }
     };
 
-    float translation[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    float translation[4] = { 0.0f, 0.0f, 2.0f, 0.0f };
 
     int last_vbl_count = -1;
     printf("done initializing\n");
@@ -205,31 +184,19 @@ int main(int argc, char **argv) {
 
             translation[2] += zdelta;
 
-            trans_mat(trans, disp);
-            perspective_mat(proj, 90.0f, 640.0f / 480.0f, 0.1f, 10.0f);
-            mat_mult(mat, trans, proj);
+            float mview_mat[16];
+            trans_mat(mview_mat, translation);
 
-            memcpy(proj, mat, sizeof(proj));
-            ident_mat(trans);
-
-            trans_mat(trans, translation);
+            float mview_proj_mat[16];
+            mat_mult(mview_proj_mat, projection, mview_mat);
 
             float points_final[4][4];
             for (idx = 0; idx < 4; idx++) {
-                float tmpvec[4];
-                /* transform_vec(points_final[idx], mat, points_orig[idx]); */
-                transform_vec(tmpvec, trans, points_orig[idx]);
-                transform_vec(points_final[idx], proj, tmpvec);
-                points_final[idx][0] /= points_final[idx][3];
-                points_final[idx][1] /= points_final[idx][3];
-                points_final[idx][2] /= points_final[idx][3];
-                points_final[idx][3] /= points_final[idx][3];
+                mat_vec_mult(points_final[idx], mview_proj_mat, mesh[idx]);
 
-                verts[idx].x = points_final[idx][0];
-                verts[idx].y = points_final[idx][1];
-                verts[idx].z = points_final[idx][2];
-
-                printf("{ %f, %f, %f }\n", (double)verts[idx].x, (double)verts[idx].y, (double)verts[idx].z );
+                verts[idx].x = points_final[idx][0] / points_final[idx][3];
+                verts[idx].y = points_final[idx][1] / points_final[idx][3];
+                verts[idx].z = points_final[idx][2] / points_final[idx][3];
             }
         }
 
@@ -246,7 +213,6 @@ int main(int argc, char **argv) {
         font_tex_render_string(tex, "culltest", 0, 0);
 
         pvr_list_finish();
-
         pvr_scene_finish();
     }
 
