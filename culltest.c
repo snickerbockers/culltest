@@ -193,10 +193,11 @@ int main(int argc, char **argv) {
             float points_final[4][4];
             for (idx = 0; idx < 4; idx++) {
                 mat_vec_mult(points_final[idx], mview_proj_mat, mesh[idx]);
+                float recip_w = 1.0f / points_final[idx][3];
 
-                verts[idx].x = points_final[idx][0] / points_final[idx][3];
-                verts[idx].y = points_final[idx][1] / points_final[idx][3];
-                verts[idx].z = points_final[idx][2] / points_final[idx][3];
+                verts[idx].x = points_final[idx][0] * recip_w;
+                verts[idx].y = points_final[idx][1] * recip_w;
+                verts[idx].z = 1.0f /  (points_final[idx][2] * recip_w);
             }
         }
 
