@@ -156,7 +156,8 @@ int main(int argc, char **argv) {
     int last_vbl_count = -1;
     printf("done initializing\n");
     for (;;) {
-        bool btn_b = false, btn_a = false;
+        bool btn_b = false, btn_a = false, up = false,
+            down = false, left = false, right = false;
 
         maple_device_t *cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
         if (cont) {
@@ -169,6 +170,14 @@ int main(int argc, char **argv) {
                 btn_b = true;
             if (stat->buttons & CONT_A)
                 btn_a = true;
+            if (stat->buttons & CONT_DPAD_UP)
+                up = true;
+            if (stat->buttons & CONT_DPAD_DOWN)
+                down = true;
+            if (stat->buttons & CONT_DPAD_LEFT)
+                left = true;
+            if (stat->buttons & CONT_DPAD_RIGHT)
+                right = true;
         }
 
         int vbl_count = pvr_get_vbl_count();
@@ -176,13 +185,25 @@ int main(int argc, char **argv) {
             int idx;
             last_vbl_count = vbl_count;
 
-            float zdelta = 0.0f;
+            float delta[3] = { 0.0f, 0.0f, 0.0f };
             if (btn_b)
-                zdelta += 1.0f / 30.0f;
+                delta[2] += 1.0f / 30.0f;
             if (btn_a)
-                zdelta -= 1.0f / 30.0f;
+                delta[2] -= 1.0f / 30.0f;
 
-            translation[2] += zdelta;
+            // TODO: why do these controls seem backwards?
+            if (left)
+                delta[0] += 32.0f;
+            if (right)
+                delta[0] -= 32.0f;
+            if (up)
+                delta[1] += 32.0f;
+            if (down)
+                delta[1] -= 32.0f;
+
+            translation[0] += delta[0];
+            translation[1] += delta[1];
+            translation[2] += delta[2];
 
             float mview_mat[16];
             trans_mat(mview_mat, translation);
