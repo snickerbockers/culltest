@@ -1,5 +1,5 @@
 TGT = culltest.elf
-OBJ = culltest.o romfont.o
+OBJ = culltest.o romfont.o matrix.o
 CXX=kos-c++
 
 .PHONY: all run clean
