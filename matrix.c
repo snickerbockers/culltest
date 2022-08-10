@@ -26,29 +26,10 @@
 
 void perspective_mat(float ret_mat[16], float fovy, float aspect,
                      float z_near, float z_far) {
-    float bottom = fsin(fovy * 0.5f) * z_near;
-    float right = bottom * aspect;
-    float far_minus_near_recip = 1.0f / (z_far - z_near);
-
-    ret_mat[0] = z_near / right;
-    ret_mat[4] = 0.0f;
-    ret_mat[8] = 0.0f;
-    ret_mat[12] = 0.0f;
-
-    ret_mat[1] = 0.0f;
-    ret_mat[5] = z_near / bottom;
-    ret_mat[9] = 0.0f;
-    ret_mat[13] = 0.0f;
-
-    ret_mat[2] = 0.0f;
-    ret_mat[6] = 0.0f;
-    ret_mat[10] = -(z_far + z_near) * far_minus_near_recip;
-    ret_mat[14] = -1.0f;
-
-    ret_mat[3] = 0.0f;
-    ret_mat[7] = 0.0f;
-    ret_mat[11] = -2.0 * z_far * z_near * far_minus_near_recip;
-    ret_mat[15] = 0.0f;
+    ret_mat[0] = z_near; ret_mat[1] = 0.0f; ret_mat[2] = 0.0f; ret_mat[3] = 0.0f;
+    ret_mat[4] = 0.0f; ret_mat[5] = z_near; ret_mat[6] = 0.0f; ret_mat[7] = 0.0f;
+    ret_mat[8] = 0.0f; ret_mat[9] = 0.0f; ret_mat[10] = 1.0f; ret_mat[11] = 0.0f;
+    ret_mat[12] = 0.0f; ret_mat[13] = 0.0f; ret_mat[14] = 1.0f; ret_mat[15] = 0.0f;
 }
 
 void

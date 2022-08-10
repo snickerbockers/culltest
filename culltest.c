@@ -161,15 +161,14 @@ int main(int argc, char **argv) {
             if (btn_a)
                 delta[2] -= 1.0f / 30.0f;
 
-            // TODO: why do these controls seem backwards?
             if (left)
-                delta[0] += 32.0f;
-            if (right)
                 delta[0] -= 32.0f;
+            if (right)
+                delta[0] += 32.0f;
             if (up)
-                delta[1] += 32.0f;
-            if (down)
                 delta[1] -= 32.0f;
+            if (down)
+                delta[1] += 32.0f;
 
             translation[0] += delta[0];
             translation[1] += delta[1];
@@ -188,7 +187,7 @@ int main(int argc, char **argv) {
 
                 verts[idx].x = points_final[idx][0] * recip_w;
                 verts[idx].y = points_final[idx][1] * recip_w;
-                verts[idx].z = 1.0f /  (points_final[idx][2] * recip_w);
+                verts[idx].z = recip_w;
             }
         }
 
