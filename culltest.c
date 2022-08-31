@@ -46,40 +46,6 @@ static void init_proj_mat(float proj[16]) {
     mat_mult(proj, offset_mat, persp_mat);
 }
 
-static char const *itoa(int val) {
-    static char buf[32];
-
-    memset(buf, 0, sizeof(buf));
-
-    int buflen = 0;
-    if (val < 0) {
-        buf[0] = '-';
-        buflen++;
-        val = -val;
-    } else if (val == 0) {
-        return "0";
-    }
-
-    bool leading = true;
-    val &= 0xffffffff; // in case sizeof(int) > 4
-    int power = 1000000000; // billion
-    while (power > 0) {
-        if (buflen >= sizeof(buf)) {
-            buf[sizeof(buf) - 1] = '\0';
-            break;
-        }
-        int digit = val / power;
-        if (!(digit == 0 && leading))
-            buf[buflen++] = digit + '0';
-        if (digit != 0)
-            leading = false;
-        val = val % power;
-        power /= 10;
-    }
-
-    return buf;
-}
-
 int main(int argc, char **argv) {
     pvr_init(&pvr_params);
 
@@ -203,17 +169,15 @@ int main(int argc, char **argv) {
 
         font_tex_render_string(tex, "culltest", 0, 0);
 
-        font_tex_render_string(tex, "x: ", 0, 1);
-        char const *x_str = itoa(translation[0]);
-        font_tex_render_string(tex, x_str, 4, 1);
+        char tmpstr[64] = { 0 };
+        snprintf(tmpstr, sizeof(tmpstr) - 1, "x: %.02f", (double)translation[0]);
+        font_tex_render_string(tex, tmpstr, 0, 1);
 
-        font_tex_render_string(tex, "y: ", 0, 2);
-        char const *y_str = itoa(translation[1]);
-        font_tex_render_string(tex, y_str, 4, 2);
+        snprintf(tmpstr, sizeof(tmpstr) - 1, "y: %.02f", (double)translation[1]);
+        font_tex_render_string(tex, tmpstr, 0, 2);
 
-        font_tex_render_string(tex, "z: ", 0, 3);
-        char const *z_str = itoa(translation[2]);
-        font_tex_render_string(tex, z_str, 4, 3);
+        snprintf(tmpstr, sizeof(tmpstr) - 1, "z: %.02f", (double)translation[2]);
+        font_tex_render_string(tex, tmpstr, 0, 3);
 
         pvr_list_finish();
         pvr_scene_finish();
