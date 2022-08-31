@@ -47,6 +47,8 @@ static void init_proj_mat(float proj[16]) {
 }
 
 int main(int argc, char **argv) {
+    bool draw_extra_tri = true;
+
     pvr_init(&pvr_params);
 
     pvr_vertex_t verts[] = {
@@ -91,8 +93,9 @@ int main(int argc, char **argv) {
 
     int last_vbl_count = -1;
     printf("done initializing\n");
+    bool btn_y_prev = false;
     for (;;) {
-        bool btn_b = false, btn_a = false, up = false,
+        bool btn_b = false, btn_a = false, btn_y = false, up = false,
             down = false, left = false, right = false;
 
         maple_device_t *cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
@@ -106,6 +109,8 @@ int main(int argc, char **argv) {
                 btn_b = true;
             if (stat->buttons & CONT_A)
                 btn_a = true;
+            if (stat->buttons & CONT_Y)
+                btn_y = true;
             if (stat->buttons & CONT_DPAD_UP)
                 up = true;
             if (stat->buttons & CONT_DPAD_DOWN)
@@ -157,6 +162,19 @@ int main(int argc, char **argv) {
             }
         }
 
+        if (btn_y && !btn_y_prev)
+            draw_extra_tri = !draw_extra_tri;
+        btn_y_prev = btn_y;
+
+        int n_verts; // how many vertices to send to the GPU
+        if (draw_extra_tri) {
+            verts[2].flags = PVR_CMD_VERTEX;
+            n_verts = 4;
+        } else {
+            verts[2].flags = PVR_CMD_VERTEX_EOL;
+            n_verts = 3;
+        }
+
         pvr_wait_ready();
         pvr_scene_begin();
 
@@ -164,7 +182,7 @@ int main(int argc, char **argv) {
 
         int idx;
         pvr_prim(&poly_hdr, sizeof(poly_hdr));
-        for (idx = 0; idx < 4; idx++)
+        for (idx = 0; idx < n_verts; idx++)
             pvr_prim(verts + idx, sizeof(verts[idx]));
 
         font_tex_render_string(tex, "culltest", 0, 0);
