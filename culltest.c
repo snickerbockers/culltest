@@ -46,8 +46,16 @@ static void init_proj_mat(float proj[16]) {
     mat_mult(proj, offset_mat, persp_mat);
 }
 
+enum screen_mode{
+    SCREEN_3D,
+    SCREEN_INFO,
+
+    N_SCREENS
+};
+
 int main(int argc, char **argv) {
     bool draw_extra_tri = true;
+    enum screen_mode cur_screen = SCREEN_3D;
 
     pvr_init(&pvr_params);
 
@@ -93,18 +101,15 @@ int main(int argc, char **argv) {
 
     int last_vbl_count = -1;
     printf("done initializing\n");
-    bool btn_y_prev = false;
+    bool btn_y_prev = false, btn_x_prev = false;
+
     for (;;) {
         bool btn_b = false, btn_a = false, btn_y = false, up = false,
-            down = false, left = false, right = false;
+            down = false, left = false, right = false, btn_x = false;
 
         maple_device_t *cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
         if (cont) {
             cont_state_t *stat = maple_dev_status(cont);
-            if (stat->buttons & CONT_START) {
-                printf("user requested exit by pressing start on controller 0\n");
-                break;
-            }
             if (stat->buttons & CONT_B)
                 btn_b = true;
             if (stat->buttons & CONT_A)
@@ -119,6 +124,8 @@ int main(int argc, char **argv) {
                 left = true;
             if (stat->buttons & CONT_DPAD_RIGHT)
                 right = true;
+            if (stat->buttons & CONT_X)
+                btn_x = true;
         }
 
         int vbl_count = pvr_get_vbl_count();
@@ -166,6 +173,10 @@ int main(int argc, char **argv) {
             draw_extra_tri = !draw_extra_tri;
         btn_y_prev = btn_y;
 
+        if (btn_x && !btn_x_prev)
+            cur_screen = (cur_screen + 1) % N_SCREENS;
+        btn_x_prev = btn_x;
+
         int n_verts; // how many vertices to send to the GPU
         if (draw_extra_tri) {
             verts[2].flags = PVR_CMD_VERTEX;
@@ -178,26 +189,47 @@ int main(int argc, char **argv) {
         pvr_wait_ready();
         pvr_scene_begin();
 
-        pvr_list_begin(PVR_LIST_OP_POLY);
+        if (cur_screen == SCREEN_3D) {
+            pvr_list_begin(PVR_LIST_OP_POLY);
 
-        int idx;
-        pvr_prim(&poly_hdr, sizeof(poly_hdr));
-        for (idx = 0; idx < n_verts; idx++)
-            pvr_prim(verts + idx, sizeof(verts[idx]));
+            int idx;
+            pvr_prim(&poly_hdr, sizeof(poly_hdr));
+            for (idx = 0; idx < n_verts; idx++)
+                pvr_prim(verts + idx, sizeof(verts[idx]));
 
-        font_tex_render_string(tex, "culltest", 0, 0);
+            font_tex_render_string(tex, "culltest", 0, 0);
 
-        char tmpstr[64] = { 0 };
-        snprintf(tmpstr, sizeof(tmpstr) - 1, "x: %.02f", (double)translation[0]);
-        font_tex_render_string(tex, tmpstr, 0, 1);
+            char tmpstr[64] = { 0 };
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "x: %.02f", (double)translation[0]);
+            font_tex_render_string(tex, tmpstr, 0, 1);
 
-        snprintf(tmpstr, sizeof(tmpstr) - 1, "y: %.02f", (double)translation[1]);
-        font_tex_render_string(tex, tmpstr, 0, 2);
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "y: %.02f", (double)translation[1]);
+            font_tex_render_string(tex, tmpstr, 0, 2);
 
-        snprintf(tmpstr, sizeof(tmpstr) - 1, "z: %.02f", (double)translation[2]);
-        font_tex_render_string(tex, tmpstr, 0, 3);
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "z: %.02f", (double)translation[2]);
+            font_tex_render_string(tex, tmpstr, 0, 3);
 
-        pvr_list_finish();
+            pvr_list_finish();
+        } else {
+            pvr_list_begin(PVR_LIST_OP_POLY);
+
+            char tmpstr[256] = { 0 };
+
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "v1: (%.02f, %.02f, %.02f)\n",
+                     (double)verts[0].x, (double)verts[0].y, (double)verts[0].z);
+            font_tex_render_string(tex, tmpstr, 0, 1);
+
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "v2: (%.02f, %.02f, %.02f)\n",
+                     (double)verts[1].x, (double)verts[1].y, (double)verts[1].z);
+            font_tex_render_string(tex, tmpstr, 0, 2);
+
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "v3: (%.02f, %.02f, %.02f)\n",
+                     (double)verts[2].x, (double)verts[2].y, (double)verts[2].z);
+            font_tex_render_string(tex, tmpstr, 0, 3);
+
+            pvr_list_finish();
+        }
+
         pvr_scene_finish();
     }
 
