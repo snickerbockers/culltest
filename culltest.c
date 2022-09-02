@@ -252,7 +252,7 @@ int main(int argc, char **argv) {
             snprintf(tmpstr, sizeof(tmpstr) - 1, "z: %.02f", (double)translation[2]);
             font_tex_render_string(tex, tmpstr, 0, 3);
 
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "det: %f\n", (double)det);
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "det: %.02f\n", (double)det);
             font_tex_render_string(tex, tmpstr, 0, 4);
 
             pvr_list_finish();
@@ -277,7 +277,7 @@ int main(int argc, char **argv) {
                      (double)(pitch * 180.0f / M_PI), (double)(yaw * 180.0f / M_PI));
             font_tex_render_string(tex, tmpstr, 0, 4);
 
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "det: %f\n", (double)det);
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "det: %.02f\n", (double)det);
             font_tex_render_string(tex, tmpstr, 0, 5);
 
             pvr_list_finish();
