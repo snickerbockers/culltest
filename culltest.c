@@ -42,6 +42,15 @@ static void init_proj_mat(float proj[16]) {
     perspective_mat(proj, 80.0f, 640.0f / 480.0f, 1.0f, 5000.0f);
 }
 
+static void rot_mat(float mat[16], float pitch, float yaw) {
+    float pitch_matrix[16], yaw_matrix[16];
+
+    pitch_mat(pitch_matrix, pitch);
+    yaw_mat(yaw_matrix, yaw);
+
+    mat_mult(mat, yaw_matrix, pitch_matrix);
+}
+
 enum screen_mode{
     SCREEN_3D,
     SCREEN_INFO,
@@ -165,7 +174,7 @@ int main(int argc, char **argv) {
             translation[2] += delta[2];
 
             float mview_mat[16], rotation_mat[16], translation_mat[16];
-            pitch_mat(rotation_mat, pitch);
+            rot_mat(rotation_mat, pitch, yaw);
             printf("rotation matrix:\n");
             print_mat(rotation_mat);
             trans_mat(translation_mat, translation);

@@ -35,6 +35,8 @@ void trans_mat(float mat[16], float const disp[3]);
 void mat_vec_mult(float vec_out[4], float const mat[16], float const vec_in[4]);
 
 void pitch_mat(float mat[16], float radians);
+void yaw_mat(float mat[16], float radians);
+
 void print_mat(float const mat[16]);
 
 #endif
