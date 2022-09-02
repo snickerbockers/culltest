@@ -273,7 +273,7 @@ int main(int argc, char **argv) {
                      (double)verts[2].x, (double)verts[2].y, (double)verts[2].z);
             font_tex_render_string(tex, tmpstr, 0, 3);
 
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "rot: (%f, %f)\n",
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "rot: (%.02f, %.02f)\n",
                      (double)(pitch * 180.0f / M_PI), (double)(yaw * 180.0f / M_PI));
             font_tex_render_string(tex, tmpstr, 0, 4);
 
