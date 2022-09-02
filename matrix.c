@@ -26,10 +26,28 @@
 
 void perspective_mat(float ret_mat[16], float fovy, float aspect,
                      float z_near, float z_far) {
-    ret_mat[0] = z_near; ret_mat[1] = 0.0f; ret_mat[2] = 0.0f; ret_mat[3] = 0.0f;
-    ret_mat[4] = 0.0f; ret_mat[5] = z_near; ret_mat[6] = 0.0f; ret_mat[7] = 0.0f;
-    ret_mat[8] = 0.0f; ret_mat[9] = 0.0f; ret_mat[10] = 1.0f; ret_mat[11] = 0.0f;
-    ret_mat[12] = 0.0f; ret_mat[13] = 0.0f; ret_mat[14] = 1.0f; ret_mat[15] = 0.0f;
+    float bottom = sin(fovy * (M_PI / 180.0) * 0.5) * z_near;
+    float right = bottom * aspect;
+
+    ret_mat[0] = z_near / right;
+    ret_mat[1] = 0.0f;
+    ret_mat[2] = 0.0f;
+    ret_mat[3] = 0.0f;
+
+    ret_mat[4] = 0.0f;
+    ret_mat[5] = z_near / bottom;
+    ret_mat[6] = 0.0f;
+    ret_mat[7] = 0.0f;
+
+    ret_mat[8] = 0.0f;
+    ret_mat[9] = 0.0f;
+    ret_mat[10] = -(z_far + z_near) / (z_far - z_near);
+    ret_mat[11] = -1.0f;
+
+    ret_mat[12] = 0.0f;
+    ret_mat[13] = 0.0f;
+    ret_mat[14] = -2.0 * z_far * z_near / (z_far - z_near);
+    ret_mat[15] = 0.0f;
 }
 
 void
@@ -70,4 +88,22 @@ mat_vec_mult(float vec_out[4],
     vec_out[1] = dot4(mat + 4, vec_in);
     vec_out[2] = dot4(mat + 8, vec_in);
     vec_out[3] = dot4(mat + 12, vec_in);
+}
+
+void pitch_mat(float mat[16], float radians) {
+    float cosine = cosf(radians);
+    float sine = sinf(radians);
+    mat[0] = 1.0f;  mat[1] = 0.0f;   mat[2] = 0.0f;    mat[3] = 0.0f;
+    mat[4] = 0.0f;  mat[5] = cosine; mat[6] = -sine;   mat[7] = 0.0f;
+    mat[8] = 0.0f;  mat[9] = sine;   mat[10] = cosine; mat[11] = 0.0f;
+    mat[12] = 0.0f; mat[13] = 0.0f;  mat[14] = 0.0f;   mat[15] = 1.0f;
+}
+
+void print_mat(float const mat[16]) {
+    int row;
+    for (row = 0; row < 4; row++) {
+        printf("\t| %f %f %f %f |\n",
+               (double)mat[row * 4], (double)mat[row * 4 + 1],
+               (double)mat[row * 4 + 2], (double)mat[row * 4 + 3]);
+    }
 }

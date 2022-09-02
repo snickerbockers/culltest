@@ -39,11 +39,7 @@ static pvr_init_params_t pvr_params = {
 };
 
 static void init_proj_mat(float proj[16]) {
-    float offset[4] = { 320.0f, 240.0f, 0.0f, 1.0f };
-    float offset_mat[16], persp_mat[16];
-    trans_mat(offset_mat, offset);
-    perspective_mat(persp_mat, 90.0f, 640.0f / 480.0f, 0.1f, 10.0f);
-    mat_mult(proj, offset_mat, persp_mat);
+    perspective_mat(proj, 80.0f, 640.0f / 480.0f, 1.0f, 5000.0f);
 }
 
 enum screen_mode{
@@ -91,21 +87,23 @@ int main(int argc, char **argv) {
     init_proj_mat(projection);
 
     float mesh[4][4] = {
-        { -320.0f, 0.0f, 0.0f, 1.0f },
-        { 0.0f, -320.0f, 0.0f, 1.0f },
-        { 320.0f, 0.0f, 0.0f, 1.0f },
-        { -320.0f, -320.0f, 0.0f, 1.0f }
+        { -1.0f, 0.0f, 0.0f, 1.0f },
+        { 0.0f, -1.0f, 0.0f, 1.0f },
+        { 1.0f, 0.0f, 0.0f, 1.0f },
+        { -1.0f, -1.0f, 0.0f, 1.0f }
     };
 
-    float translation[4] = { 0.0f, 0.0f, 2.0f, 0.0f };
+    float translation[4] = { 0.0f, 0.0f, -2.0f, 0.0f };
 
     int last_vbl_count = -1;
     printf("done initializing\n");
     bool btn_y_prev = false, btn_x_prev = false;
+    float pitch = 0.0f, yaw = 0.0f;
 
     for (;;) {
         bool btn_b = false, btn_a = false, btn_y = false, up = false,
             down = false, left = false, right = false, btn_x = false;
+        int joyx, joyy;
 
         maple_device_t *cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
         if (cont) {
@@ -126,12 +124,26 @@ int main(int argc, char **argv) {
                 right = true;
             if (stat->buttons & CONT_X)
                 btn_x = true;
+            joyx = stat->joyx;
+            joyy = stat->joyy;
+        } else {
+            joyx = 0;
+            joyy = 0;
         }
 
         int vbl_count = pvr_get_vbl_count();
         if (last_vbl_count != vbl_count) {
             int idx;
             last_vbl_count = vbl_count;
+
+#define DEADZONE 32.0f
+            if (fabsf(joyy) > DEADZONE)
+                pitch -= joyy / (128.0f * 30.0f);
+            if (fabsf(joyx) > DEADZONE)
+                yaw += joyx / (128.0f * 30.0f);
+
+            pitch = fmodf(pitch, 2.0f * M_PI);
+            yaw = fmodf(yaw, 2.0f * M_PI);
 
             float delta[3] = { 0.0f, 0.0f, 0.0f };
             if (btn_b)
@@ -140,20 +152,24 @@ int main(int argc, char **argv) {
                 delta[2] -= 1.0f / 30.0f;
 
             if (left)
-                delta[0] -= 32.0f;
+                delta[0] -= 1.0f/60.0f;
             if (right)
-                delta[0] += 32.0f;
+                delta[0] += 1.0f/60.0f;
             if (up)
-                delta[1] -= 32.0f;
+                delta[1] -= 1.0f/60.0f;
             if (down)
-                delta[1] += 32.0f;
+                delta[1] += 1.0f/60.0f;
 
             translation[0] += delta[0];
             translation[1] += delta[1];
             translation[2] += delta[2];
 
-            float mview_mat[16];
-            trans_mat(mview_mat, translation);
+            float mview_mat[16], rotation_mat[16], translation_mat[16];
+            pitch_mat(rotation_mat, pitch);
+            printf("rotation matrix:\n");
+            print_mat(rotation_mat);
+            trans_mat(translation_mat, translation);
+            mat_mult(mview_mat, translation_mat, rotation_mat);
 
             float mview_proj_mat[16];
             mat_mult(mview_proj_mat, projection, mview_mat);
@@ -166,6 +182,9 @@ int main(int argc, char **argv) {
                 verts[idx].x = points_final[idx][0] * recip_w;
                 verts[idx].y = points_final[idx][1] * recip_w;
                 verts[idx].z = recip_w;
+
+                verts[idx].x = (verts[idx].x + 1.0f) * 320.0f;
+                verts[idx].y = (verts[idx].y + 1.0f) * 120.0f;
             }
         }
 
@@ -226,6 +245,11 @@ int main(int argc, char **argv) {
             snprintf(tmpstr, sizeof(tmpstr) - 1, "v3: (%.02f, %.02f, %.02f)\n",
                      (double)verts[2].x, (double)verts[2].y, (double)verts[2].z);
             font_tex_render_string(tex, tmpstr, 0, 3);
+
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "rot: (%f, %f)\n",
+                     (double)(pitch * M_PI / 18.0f), (double)(yaw * M_PI / 180.0f));
+            /* snprintf(tmpstr, sizeof(tmpstr) - 1, "joy: (%d, %d)\n", joyx, joyy); */
+            font_tex_render_string(tex, tmpstr, 0, 4);
 
             pvr_list_finish();
         }

@@ -8,7 +8,7 @@ all: $(TGT)
 include $(KOS_BASE)/Makefile.rules
 
 %.elf: $(OBJ)
-	kos-c++ -o $@ $^
+	kos-c++ -o $@ $^ -lm
 
 clean:
 	rm -f $(TGT) $(OBJ)
