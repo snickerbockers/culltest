@@ -85,9 +85,9 @@ int main(int argc, char **argv) {
         }
     };
 
-    static unsigned short font[288 * 24 * 12];
-    create_font(font, ~0, 0);
-    pvr_ptr_t tex = font_tex_create(font);
+    static unsigned short white_font[288 * 24 * 12];
+    create_font(white_font, ~0, 0);
+    pvr_ptr_t white_font_tex = font_tex_create(white_font);
 
     pvr_poly_cxt_t poly_ctxt;
     pvr_poly_hdr_t poly_hdr;
@@ -254,20 +254,20 @@ int main(int argc, char **argv) {
             for (idx = 0; idx < n_verts; idx++)
                 pvr_prim(verts + idx, sizeof(verts[idx]));
 
-            font_tex_render_string(tex, "culltest", 0, 0);
+            font_tex_render_string(white_font_tex, "culltest", 0, 0);
 
             char tmpstr[64] = { 0 };
             snprintf(tmpstr, sizeof(tmpstr) - 1, "x: %.02f", (double)translation[0]);
-            font_tex_render_string(tex, tmpstr, 0, 1);
+            font_tex_render_string(white_font_tex, tmpstr, 0, 1);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "y: %.02f", (double)translation[1]);
-            font_tex_render_string(tex, tmpstr, 0, 2);
+            font_tex_render_string(white_font_tex, tmpstr, 0, 2);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "z: %.02f", (double)translation[2]);
-            font_tex_render_string(tex, tmpstr, 0, 3);
+            font_tex_render_string(white_font_tex, tmpstr, 0, 3);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "det: %.02f\n", (double)det);
-            font_tex_render_string(tex, tmpstr, 0, 4);
+            font_tex_render_string(white_font_tex, tmpstr, 0, 4);
 
             pvr_list_finish();
         } else {
@@ -275,26 +275,29 @@ int main(int argc, char **argv) {
 
             char tmpstr[256] = { 0 };
 
+            font_tex_render_string(white_font_tex, "STATUS",
+                                   (FONT_TEX_N_COL - strlen("STATUS")) / 2, 1);
+
             snprintf(tmpstr, sizeof(tmpstr) - 1, "v1: (%.02f, %.02f, %.02f)\n",
                      (double)verts[0].x, (double)verts[0].y, (double)verts[0].z);
-            font_tex_render_string(tex, tmpstr, 0, 1);
+            font_tex_render_string(white_font_tex, tmpstr, 0, 3);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "v2: (%.02f, %.02f, %.02f)\n",
                      (double)verts[1].x, (double)verts[1].y, (double)verts[1].z);
-            font_tex_render_string(tex, tmpstr, 0, 2);
+            font_tex_render_string(white_font_tex, tmpstr, 0, 4);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "v3: (%.02f, %.02f, %.02f)\n",
                      (double)verts[2].x, (double)verts[2].y, (double)verts[2].z);
-            font_tex_render_string(tex, tmpstr, 0, 3);
+            font_tex_render_string(white_font_tex, tmpstr, 0, 5);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "rot: (%.02f, %.02f, %.02f)\n",
                      (double)(pitch * 180.0f / M_PI),
                      (double)(yaw * 180.0f / M_PI),
                      (double)(roll * 180.0f / M_PI));
-            font_tex_render_string(tex, tmpstr, 0, 4);
+            font_tex_render_string(white_font_tex, tmpstr, 0, 6);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "det: %.02f\n", (double)det);
-            font_tex_render_string(tex, tmpstr, 0, 5);
+            font_tex_render_string(white_font_tex, tmpstr, 0, 7);
 
             pvr_list_finish();
         }
