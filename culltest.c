@@ -202,16 +202,14 @@ int main(int argc, char **argv) {
                 verts[idx].x = points_final[idx][0] * recip_w;
                 verts[idx].y = points_final[idx][1] * recip_w;
                 verts[idx].z = recip_w;
+
+                verts[idx].x = (verts[idx].x + 1.0f) * 320.0f;
+                verts[idx].y = (verts[idx].y + 1.0f) * 120.0f;
             }
 
             det = verts[0].x * (verts[1].y - verts[2].y) +
                 verts[1].x * (verts[2].y - verts[0].y) +
                 verts[2].x * (verts[0].y - verts[1].y);
-
-            for (idx = 0; idx < 4; idx++) {
-                verts[idx].x = (verts[idx].x + 1.0f) * 320.0f;
-                verts[idx].y = (verts[idx].y + 1.0f) * 120.0f;
-            }
         }
 
         if (btn_y && !btn_y_prev)
