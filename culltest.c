@@ -53,11 +53,18 @@ static void rot_mat(float mat[16], float pitch, float yaw, float roll) {
     mat_mult(mat, rollyaw_matrix, pitch_matrix);
 }
 
-enum screen_mode{
+enum screen_mode {
     SCREEN_3D,
     SCREEN_INFO,
 
     N_SCREENS
+};
+
+enum option_selection {
+    OPT_SEL_CULL_MODE,
+    OPT_SEL_CULL_VAL,
+
+    OPT_SEL_CULL_LEN
 };
 
 int main(int argc, char **argv) {
@@ -86,13 +93,11 @@ int main(int argc, char **argv) {
     };
 
     static unsigned short white_font[288 * 24 * 12];
+    static unsigned short blue_font[288 * 24 * 12];
     create_font(white_font, ~0, 0);
+    create_font(blue_font, make_color(103, 113, 252), 0);
     pvr_ptr_t white_font_tex = font_tex_create(white_font);
-
-    pvr_poly_cxt_t poly_ctxt;
-    pvr_poly_hdr_t poly_hdr;
-    pvr_poly_cxt_col(&poly_ctxt, PVR_LIST_OP_POLY);
-    pvr_poly_compile(&poly_hdr, &poly_ctxt);
+    pvr_ptr_t blue_font_tex = font_tex_create(blue_font);
 
     float projection[16];
     init_proj_mat(projection);
@@ -108,8 +113,18 @@ int main(int argc, char **argv) {
 
     int last_vbl_count = -1;
     printf("done initializing\n");
-    bool btn_y_prev = false, btn_x_prev = false;
+    bool btn_y_prev = false, btn_x_prev = false, up_prev = false,
+        down_prev = false, a_prev = false;
     float pitch = 0.0f, yaw = 0.0f, roll = 0.0f;
+    int cull_mode = PVR_CULLING_NONE;
+    enum option_selection opt_sel = OPT_SEL_CULL_MODE;
+    float cull_tolerance = 0.0f;
+    static char const* cull_mode_names[] = {
+        "PVR_CULL_NONE",
+        "PVR_CULL_SMALL",
+        "PVR_CULL_NEGATIVE",
+        "PVR_CULL_POSITIVE"
+    };
 
     for (;;) {
         bool btn_b = false, btn_a = false, btn_y = false, up = false,
@@ -157,46 +172,71 @@ int main(int argc, char **argv) {
             int idx;
             last_vbl_count = vbl_count;
 
+            if (cur_screen == SCREEN_3D) {
 #define DEADZONE 32.0f
-            if (fabsf(joyy) > DEADZONE)
-                pitch -= joyy / (128.0f * 30.0f);
-            if (fabsf(joyx) > DEADZONE)
-                yaw += joyx / (128.0f * 30.0f);
+                if (fabsf(joyy) > DEADZONE)
+                    pitch -= joyy / (128.0f * 30.0f);
+                if (fabsf(joyx) > DEADZONE)
+                    yaw += joyx / (128.0f * 30.0f);
 
-            if (fabsf(ltrig) > DEADZONE)
-                roll -= ltrig / (128.0f * 30.0f);
-            if (fabsf(rtrig) > DEADZONE)
-                roll += rtrig / (128.0f * 30.0f);
+                if (fabsf(ltrig) > DEADZONE)
+                    roll -= ltrig / (128.0f * 30.0f);
+                if (fabsf(rtrig) > DEADZONE)
+                    roll += rtrig / (128.0f * 30.0f);
 
-            pitch = fmodf(pitch, 2.0f * M_PI);
-            yaw = fmodf(yaw, 2.0f * M_PI);
-            roll = fmodf(roll, 2.0f * M_PI);
+                pitch = fmodf(pitch, 2.0f * M_PI);
+                yaw = fmodf(yaw, 2.0f * M_PI);
+                roll = fmodf(roll, 2.0f * M_PI);
 
-            if (pitch < 0.0f)
-                pitch += 2.0f * M_PI;
-            if (yaw < 0.0f)
-                yaw += 2.0f * M_PI;
-            if (roll < 0.0f)
-                roll += 2.0f * M_PI;
+                if (pitch < 0.0f)
+                    pitch += 2.0f * M_PI;
+                if (yaw < 0.0f)
+                    yaw += 2.0f * M_PI;
+                if (roll < 0.0f)
+                    roll += 2.0f * M_PI;
 
-            float delta[3] = { 0.0f, 0.0f, 0.0f };
-            if (btn_b)
-                delta[2] += 1.0f / 30.0f;
-            if (btn_a)
-                delta[2] -= 1.0f / 30.0f;
+                float delta[3] = { 0.0f, 0.0f, 0.0f };
+                if (btn_b)
+                    delta[2] += 1.0f / 30.0f;
+                if (btn_a)
+                    delta[2] -= 1.0f / 30.0f;
 
-            if (left)
-                delta[0] -= 1.0f/60.0f;
-            if (right)
-                delta[0] += 1.0f/60.0f;
-            if (up)
-                delta[1] -= 1.0f/60.0f;
-            if (down)
-                delta[1] += 1.0f/60.0f;
+                if (left)
+                    delta[0] -= 1.0f/60.0f;
+                if (right)
+                    delta[0] += 1.0f/60.0f;
+                if (up)
+                    delta[1] -= 1.0f/60.0f;
+                if (down)
+                    delta[1] += 1.0f/60.0f;
 
-            translation[0] += delta[0];
-            translation[1] += delta[1];
-            translation[2] += delta[2];
+                translation[0] += delta[0];
+                translation[1] += delta[1];
+                translation[2] += delta[2];
+            } else if (cur_screen == SCREEN_INFO) {
+                if (btn_a && !a_prev)
+                    opt_sel = (opt_sel + 1) % OPT_SEL_CULL_LEN;
+
+                if (opt_sel == OPT_SEL_CULL_MODE) {
+                    if (up && !up_prev)
+                        cull_mode = (cull_mode + 1) % 4;
+
+                    if (down && !down_prev) {
+                        cull_mode = cull_mode - 1;
+                        if (cull_mode < 0)
+                            cull_mode = 3;
+                    }
+                } else if (opt_sel == OPT_SEL_CULL_VAL) {
+                    if (up && !up_prev)
+                        cull_tolerance += 0.1f;
+                    if (down && !down_prev)
+                        cull_tolerance -= 0.1f;
+                }
+            }
+
+            a_prev = btn_a;
+            up_prev = up;
+            down_prev = down;
 
             float mview_mat[16], rotation_mat[16], translation_mat[16];
             rot_mat(rotation_mat, pitch, yaw, roll);
@@ -249,6 +289,14 @@ int main(int argc, char **argv) {
         if (cur_screen == SCREEN_3D) {
             pvr_list_begin(PVR_LIST_OP_POLY);
 
+            pvr_poly_cxt_t poly_ctxt;
+            pvr_poly_hdr_t poly_hdr;
+            pvr_poly_cxt_col(&poly_ctxt, PVR_LIST_OP_POLY);
+            poly_ctxt.gen.culling = cull_mode;
+            pvr_poly_compile(&poly_hdr, &poly_ctxt);
+
+            PVR_SET(PVR_OBJECT_CLIP, cull_tolerance);
+
             int idx;
             pvr_prim(&poly_hdr, sizeof(poly_hdr));
             for (idx = 0; idx < n_verts; idx++)
@@ -298,6 +346,18 @@ int main(int argc, char **argv) {
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "det: %.02f\n", (double)det);
             font_tex_render_string(white_font_tex, tmpstr, 0, 7);
+
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "cull mode: %s",
+                     cull_mode_names[cull_mode % 4]);
+            font_tex_render_string(opt_sel == OPT_SEL_CULL_MODE ?
+                                   blue_font_tex : white_font_tex,
+                                   tmpstr, 0, 8);
+
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "cull tolerance: %.02f",
+                     (double)cull_tolerance);
+            font_tex_render_string(opt_sel == OPT_SEL_CULL_VAL ?
+                                   blue_font_tex : white_font_tex,
+                                   tmpstr, 0, 9);
 
             pvr_list_finish();
         }
