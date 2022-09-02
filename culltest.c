@@ -61,7 +61,7 @@ enum screen_mode{
 };
 
 int main(int argc, char **argv) {
-    bool draw_extra_tri = true;
+    bool draw_extra_tri = false;
     enum screen_mode cur_screen = SCREEN_3D;
 
     pvr_init(&pvr_params);
