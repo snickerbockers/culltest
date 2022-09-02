@@ -154,6 +154,11 @@ int main(int argc, char **argv) {
             pitch = fmodf(pitch, 2.0f * M_PI);
             yaw = fmodf(yaw, 2.0f * M_PI);
 
+            if (pitch < 0.0f)
+                pitch += 2.0f * M_PI;
+            if (yaw < 0.0f)
+                yaw += 2.0f * M_PI;
+
             float delta[3] = { 0.0f, 0.0f, 0.0f };
             if (btn_b)
                 delta[2] += 1.0f / 30.0f;
@@ -256,7 +261,7 @@ int main(int argc, char **argv) {
             font_tex_render_string(tex, tmpstr, 0, 3);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "rot: (%f, %f)\n",
-                     (double)(pitch * M_PI / 18.0f), (double)(yaw * M_PI / 180.0f));
+                     (double)(pitch * 180.0f / M_PI), (double)(yaw * 180.0f / M_PI));
             /* snprintf(tmpstr, sizeof(tmpstr) - 1, "joy: (%d, %d)\n", joyx, joyy); */
             font_tex_render_string(tex, tmpstr, 0, 4);
 
