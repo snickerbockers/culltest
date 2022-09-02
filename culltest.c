@@ -140,6 +140,12 @@ int main(int argc, char **argv) {
             joyy = 0;
         }
 
+        /*
+         * determinant used for backface culling
+         * we only need it for the info screen
+         */
+        float det = 0.0f;
+
         int vbl_count = pvr_get_vbl_count();
         if (last_vbl_count != vbl_count) {
             int idx;
@@ -196,7 +202,13 @@ int main(int argc, char **argv) {
                 verts[idx].x = points_final[idx][0] * recip_w;
                 verts[idx].y = points_final[idx][1] * recip_w;
                 verts[idx].z = recip_w;
+            }
 
+            det = verts[0].x * (verts[1].y - verts[2].y) +
+                verts[1].x * (verts[2].y - verts[0].y) +
+                verts[2].x * (verts[0].y - verts[1].y);
+
+            for (idx = 0; idx < 4; idx++) {
                 verts[idx].x = (verts[idx].x + 1.0f) * 320.0f;
                 verts[idx].y = (verts[idx].y + 1.0f) * 120.0f;
             }
@@ -242,6 +254,9 @@ int main(int argc, char **argv) {
             snprintf(tmpstr, sizeof(tmpstr) - 1, "z: %.02f", (double)translation[2]);
             font_tex_render_string(tex, tmpstr, 0, 3);
 
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "det: %f\n", (double)det);
+            font_tex_render_string(tex, tmpstr, 0, 4);
+
             pvr_list_finish();
         } else {
             pvr_list_begin(PVR_LIST_OP_POLY);
@@ -262,8 +277,10 @@ int main(int argc, char **argv) {
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "rot: (%f, %f)\n",
                      (double)(pitch * 180.0f / M_PI), (double)(yaw * 180.0f / M_PI));
-            /* snprintf(tmpstr, sizeof(tmpstr) - 1, "joy: (%d, %d)\n", joyx, joyy); */
             font_tex_render_string(tex, tmpstr, 0, 4);
+
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "det: %f\n", (double)det);
+            font_tex_render_string(tex, tmpstr, 0, 5);
 
             pvr_list_finish();
         }
