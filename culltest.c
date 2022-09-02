@@ -42,13 +42,15 @@ static void init_proj_mat(float proj[16]) {
     perspective_mat(proj, 80.0f, 640.0f / 480.0f, 1.0f, 5000.0f);
 }
 
-static void rot_mat(float mat[16], float pitch, float yaw) {
-    float pitch_matrix[16], yaw_matrix[16];
+static void rot_mat(float mat[16], float pitch, float yaw, float roll) {
+    float pitch_matrix[16], yaw_matrix[16], roll_matrix[16], rollyaw_matrix[16];
 
     pitch_mat(pitch_matrix, pitch);
     yaw_mat(yaw_matrix, yaw);
+    roll_mat(roll_matrix, roll);
 
-    mat_mult(mat, yaw_matrix, pitch_matrix);
+    mat_mult(rollyaw_matrix, roll_matrix, yaw_matrix);
+    mat_mult(mat, rollyaw_matrix, pitch_matrix);
 }
 
 enum screen_mode{
@@ -107,12 +109,12 @@ int main(int argc, char **argv) {
     int last_vbl_count = -1;
     printf("done initializing\n");
     bool btn_y_prev = false, btn_x_prev = false;
-    float pitch = 0.0f, yaw = 0.0f;
+    float pitch = 0.0f, yaw = 0.0f, roll = 0.0f;
 
     for (;;) {
         bool btn_b = false, btn_a = false, btn_y = false, up = false,
             down = false, left = false, right = false, btn_x = false;
-        int joyx, joyy;
+        int joyx, joyy, ltrig, rtrig;
 
         maple_device_t *cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
         if (cont) {
@@ -135,9 +137,13 @@ int main(int argc, char **argv) {
                 btn_x = true;
             joyx = stat->joyx;
             joyy = stat->joyy;
+            ltrig = stat->ltrig;
+            rtrig = stat->rtrig;
         } else {
             joyx = 0;
             joyy = 0;
+            ltrig = 0;
+            rtrig = 0;
         }
 
         /*
@@ -157,13 +163,21 @@ int main(int argc, char **argv) {
             if (fabsf(joyx) > DEADZONE)
                 yaw += joyx / (128.0f * 30.0f);
 
+            if (fabsf(ltrig) > DEADZONE)
+                roll -= ltrig / (128.0f * 30.0f);
+            if (fabsf(rtrig) > DEADZONE)
+                roll += rtrig / (128.0f * 30.0f);
+
             pitch = fmodf(pitch, 2.0f * M_PI);
             yaw = fmodf(yaw, 2.0f * M_PI);
+            roll = fmodf(roll, 2.0f * M_PI);
 
             if (pitch < 0.0f)
                 pitch += 2.0f * M_PI;
             if (yaw < 0.0f)
                 yaw += 2.0f * M_PI;
+            if (roll < 0.0f)
+                roll += 2.0f * M_PI;
 
             float delta[3] = { 0.0f, 0.0f, 0.0f };
             if (btn_b)
@@ -185,7 +199,7 @@ int main(int argc, char **argv) {
             translation[2] += delta[2];
 
             float mview_mat[16], rotation_mat[16], translation_mat[16];
-            rot_mat(rotation_mat, pitch, yaw);
+            rot_mat(rotation_mat, pitch, yaw, roll);
             printf("rotation matrix:\n");
             print_mat(rotation_mat);
             trans_mat(translation_mat, translation);
@@ -273,8 +287,10 @@ int main(int argc, char **argv) {
                      (double)verts[2].x, (double)verts[2].y, (double)verts[2].z);
             font_tex_render_string(tex, tmpstr, 0, 3);
 
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "rot: (%.02f, %.02f)\n",
-                     (double)(pitch * 180.0f / M_PI), (double)(yaw * 180.0f / M_PI));
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "rot: (%.02f, %.02f, %.02f)\n",
+                     (double)(pitch * 180.0f / M_PI),
+                     (double)(yaw * 180.0f / M_PI),
+                     (double)(roll * 180.0f / M_PI));
             font_tex_render_string(tex, tmpstr, 0, 4);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "det: %.02f\n", (double)det);

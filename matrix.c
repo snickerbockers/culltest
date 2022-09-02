@@ -108,6 +108,15 @@ void yaw_mat(float mat[16], float radians) {
     mat[12] = 0.0f;  mat[13] = 0.0f; mat[14] = 0.0f;   mat[15] = 1.0f;
 }
 
+void roll_mat(float mat[16], float radians) {
+    float cosine = cosf(radians);
+    float sine = sinf(radians);
+    mat[0] = cosine; mat[1] = -sine;  mat[2] = 0.0f;  mat[3] = 0.0f;
+    mat[4] = sine;   mat[5] = cosine; mat[6] = 0.0f;  mat[7] = 0.0f;
+    mat[8] = 0.0f;   mat[9] = 0.0f;   mat[10] = 1.0f; mat[11] = 0.0f;
+    mat[12] = 0.0f;  mat[13] = 0.0f;  mat[14] = 0.0f; mat[15] = 1.0f;
+}
+
 void print_mat(float const mat[16]) {
     int row;
     for (row = 0; row < 4; row++) {
