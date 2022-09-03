@@ -240,8 +240,8 @@ int main(int argc, char **argv) {
 
             float mview_mat[16], rotation_mat[16], translation_mat[16];
             rot_mat(rotation_mat, pitch, yaw, roll);
-            printf("rotation matrix:\n");
-            print_mat(rotation_mat);
+            /* printf("rotation matrix:\n"); */
+            /* print_mat(rotation_mat); */
             trans_mat(translation_mat, translation);
             mat_mult(mview_mat, translation_mat, rotation_mat);
 
