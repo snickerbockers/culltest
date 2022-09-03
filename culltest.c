@@ -232,9 +232,9 @@ int main(int argc, char **argv) {
                     }
                 } else if (opt_sel == OPT_SEL_CULL_VAL) {
                     if (up && !up_prev)
-                        cull_tolerance += 0.1f;
+                        cull_tolerance += 100.0f;
                     if (down && !down_prev)
-                        cull_tolerance -= 0.1f;
+                        cull_tolerance -= 100.0f;
                 }
             }
 
