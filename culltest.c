@@ -299,7 +299,15 @@ int main(int argc, char **argv) {
             poly_ctxt.gen.culling = cull_mode;
             pvr_poly_compile(&poly_hdr, &poly_ctxt);
 
-            PVR_SET(PVR_OBJECT_CLIP, cull_tolerance);
+            /*
+             * write cull_tolerance to the PVR_OBJECT_CLIP register
+             *
+             * ideally this would be done via KOS' PVR_SET macro; however
+             * PVR_SET doesn't actually work here because it casts to
+             * a uint32, so we have to do it ourselves.
+             */
+            /* PVR_SET(PVR_OBJECT_CLIP, cull_tolerance); */
+            *((float volatile*)0xa05f8078) = cull_tolerance;
 
             int idx;
             pvr_prim(&poly_hdr, sizeof(poly_hdr));
