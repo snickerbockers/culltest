@@ -134,6 +134,10 @@ int main(int argc, char **argv) {
         maple_device_t *cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
         if (cont) {
             cont_state_t *stat = maple_dev_status(cont);
+            if (stat->buttons & CONT_START) {
+                printf("**** start button pressed - exiting! ****\n");
+                exit(0);
+            }
             if (stat->buttons & CONT_B)
                 btn_b = true;
             if (stat->buttons & CONT_A)
