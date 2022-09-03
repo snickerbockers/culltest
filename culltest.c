@@ -103,10 +103,10 @@ int main(int argc, char **argv) {
     init_proj_mat(projection);
 
     float mesh[4][4] = {
-        { -1.0f, 0.0f, 0.0f, 1.0f },
-        { 0.0f, -1.0f, 0.0f, 1.0f },
-        { 1.0f, 0.0f, 0.0f, 1.0f },
-        { -1.0f, -1.0f, 0.0f, 1.0f }
+        { -1.0f, -1.0f, 0.0f, 1.0f },
+        {  1.0f, -1.0f, 0.0f, 1.0f },
+        { -1.0f,  1.0f, 0.0f, 1.0f },
+        {  1.0f,  1.0f, 0.0f, 1.0f }
     };
 
     float translation[4] = { 0.0f, 0.0f, -2.0f, 0.0f };
@@ -169,7 +169,7 @@ int main(int argc, char **argv) {
          * determinant used for backface culling
          * we only need it for the info screen
          */
-        float det = 0.0f;
+        float det[2] = { 0.0f, 0.0f };
 
         int vbl_count = pvr_get_vbl_count();
         if (last_vbl_count != vbl_count) {
@@ -265,9 +265,14 @@ int main(int argc, char **argv) {
                 verts[idx].y = (verts[idx].y + 1.0f) * 120.0f;
             }
 
-            det = verts[0].x * (verts[1].y - verts[2].y) +
+            det[0] = verts[0].x * (verts[1].y - verts[2].y) +
                 verts[1].x * (verts[2].y - verts[0].y) +
                 verts[2].x * (verts[0].y - verts[1].y);
+
+
+            det[1] = verts[1].x * (verts[2].y - verts[3].y) +
+                verts[2].x * (verts[3].y - verts[1].y) +
+                verts[3].x * (verts[1].y - verts[2].y);
         }
 
         if (btn_y && !btn_y_prev)
@@ -314,20 +319,26 @@ int main(int argc, char **argv) {
             for (idx = 0; idx < n_verts; idx++)
                 pvr_prim(verts + idx, sizeof(verts[idx]));
 
-            font_tex_render_string(white_font_tex, "culltest", 0, 0);
+            int nextrow = 0;
+            font_tex_render_string(white_font_tex, "culltest", 0, nextrow++);
 
             char tmpstr[64] = { 0 };
             snprintf(tmpstr, sizeof(tmpstr) - 1, "x: %.02f", (double)translation[0]);
-            font_tex_render_string(white_font_tex, tmpstr, 0, 1);
+            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "y: %.02f", (double)translation[1]);
-            font_tex_render_string(white_font_tex, tmpstr, 0, 2);
+            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "z: %.02f", (double)translation[2]);
-            font_tex_render_string(white_font_tex, tmpstr, 0, 3);
+            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
 
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "det: %.02f\n", (double)det);
-            font_tex_render_string(white_font_tex, tmpstr, 0, 4);
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "det[0]: %.02f\n", (double)det[0]);
+            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            if (draw_extra_tri) {
+                snprintf(tmpstr, sizeof(tmpstr) - 1, "det[1]: %.02f\n",
+                         (double)det[1]);
+                font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            }
 
             pvr_list_finish();
         } else {
@@ -338,38 +349,49 @@ int main(int argc, char **argv) {
             font_tex_render_string(white_font_tex, "STATUS",
                                    (FONT_TEX_N_COL - strlen("STATUS")) / 2, 1);
 
+            int nextrow = 3;
             snprintf(tmpstr, sizeof(tmpstr) - 1, "v1: (%.02f, %.02f, %.02f)\n",
                      (double)verts[0].x, (double)verts[0].y, (double)verts[0].z);
-            font_tex_render_string(white_font_tex, tmpstr, 0, 3);
+            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "v2: (%.02f, %.02f, %.02f)\n",
                      (double)verts[1].x, (double)verts[1].y, (double)verts[1].z);
-            font_tex_render_string(white_font_tex, tmpstr, 0, 4);
+            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "v3: (%.02f, %.02f, %.02f)\n",
                      (double)verts[2].x, (double)verts[2].y, (double)verts[2].z);
-            font_tex_render_string(white_font_tex, tmpstr, 0, 5);
+            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+
+            if (draw_extra_tri) {
+                snprintf(tmpstr, sizeof(tmpstr) - 1, "v4: (%.02f, %.02f, %.02f)\n",
+                         (double)verts[3].x, (double)verts[3].y, (double)verts[3].z);
+                font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            }
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "rot: (%.02f, %.02f, %.02f)\n",
                      (double)(pitch * 180.0f / M_PI),
                      (double)(yaw * 180.0f / M_PI),
                      (double)(roll * 180.0f / M_PI));
-            font_tex_render_string(white_font_tex, tmpstr, 0, 6);
+            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
 
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "det: %.02f\n", (double)det);
-            font_tex_render_string(white_font_tex, tmpstr, 0, 7);
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "det[0]: %.02f\n", (double)det[0]);
+            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            if (draw_extra_tri) {
+                snprintf(tmpstr, sizeof(tmpstr) - 1, "det[1]: %.02f\n", (double)det[1]);
+                font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            }
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "cull mode: %s",
                      cull_mode_names[cull_mode % 4]);
             font_tex_render_string(opt_sel == OPT_SEL_CULL_MODE ?
                                    blue_font_tex : white_font_tex,
-                                   tmpstr, 0, 8);
+                                   tmpstr, 0, nextrow++);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "cull tolerance: %.02f",
                      (double)cull_tolerance);
             font_tex_render_string(opt_sel == OPT_SEL_CULL_VAL ?
                                    blue_font_tex : white_font_tex,
-                                   tmpstr, 0, 9);
+                                   tmpstr, 0, nextrow++);
 
             pvr_list_finish();
         }
