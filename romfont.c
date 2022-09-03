@@ -275,6 +275,7 @@ void font_tex_render_char(pvr_ptr_t tex, char ch, unsigned xpos, unsigned ypos) 
     pvr_poly_cxt_txr(&poly_ctxt, PVR_LIST_OP_POLY, PVR_TXRFMT_RGB565 | PVR_TXRFMT_NONTWIDDLED,
                      FONT_TEX_WIDTH, FONT_TEX_HEIGHT, tex, PVR_FILTER_BILINEAR);
     poly_ctxt.depth.comparison = PVR_DEPTHCMP_ALWAYS;
+    poly_ctxt.gen.culling = PVR_CULLING_NONE;
     pvr_poly_compile(&poly_hdr, &poly_ctxt);
 
     pvr_prim(&poly_hdr, sizeof(poly_hdr));
