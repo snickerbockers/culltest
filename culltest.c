@@ -120,10 +120,10 @@ int main(int argc, char **argv) {
     enum option_selection opt_sel = OPT_SEL_CULL_MODE;
     float cull_tolerance = 0.0f;
     static char const* cull_mode_names[] = {
-        "PVR_CULL_NONE",
-        "PVR_CULL_SMALL",
-        "PVR_CULL_NEGATIVE",
-        "PVR_CULL_POSITIVE"
+        "PVR_CULLING_NONE",
+        "PVR_CULLING_SMALL",
+        "PVR_CULLING_NEGATIVE",
+        "PVR_CULLING_POSITIVE"
     };
 
     for (;;) {
