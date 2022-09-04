@@ -338,24 +338,24 @@ int main(int argc, char **argv) {
                 pvr_prim(verts + idx, sizeof(verts[idx]));
 
             int nextrow = 1;
-            font_tex_render_string(white_font_tex, "culltest", 0, nextrow++);
+            center_text(white_font_tex, "culltest", nextrow++);
 
             char tmpstr[64] = { 0 };
             snprintf(tmpstr, sizeof(tmpstr) - 1, "x: %.02f", (double)translation[0]);
-            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, 2, nextrow++);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "y: %.02f", (double)translation[1]);
-            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, 2, nextrow++);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "z: %.02f", (double)translation[2]);
-            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, 2, nextrow++);
 
             snprintf(tmpstr, sizeof(tmpstr) - 1, "det[0]: %.02f\n", (double)det[0]);
-            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, 2, nextrow++);
             if (draw_extra_tri) {
                 snprintf(tmpstr, sizeof(tmpstr) - 1, "det[1]: %.02f\n",
                          (double)det[1]);
-                font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+                font_tex_render_string(white_font_tex, tmpstr, 2, nextrow++);
             }
 
             center_text(white_font_tex, "TRANSLATE WITH D-PAD, A AND B",
