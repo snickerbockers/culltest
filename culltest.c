@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
     static unsigned short white_font[288 * 24 * 12];
     static unsigned short blue_font[288 * 24 * 12];
     create_font(white_font, ~0, 0);
-    create_font(blue_font, make_color(103, 113, 252), 0);
+    create_font(blue_font, ~0, make_color(0, 0, 255));
     pvr_ptr_t white_font_tex = font_tex_create(white_font);
     pvr_ptr_t blue_font_tex = font_tex_create(blue_font);
 
@@ -400,13 +400,13 @@ int main(int argc, char **argv) {
             pvr_ptr_t cull_tolerance_tex = (opt_sel == OPT_SEL_CULL_VAL ?
                                             blue_font_tex : white_font_tex);
 
-            font_tex_render_string(cull_mode_tex, "cull mode:",
+            font_tex_render_string(white_font_tex, "cull mode:",
                                    SCREEN_INFO_COL_0, nextrow);
             font_tex_render_string(cull_mode_tex,
                                    cull_mode_names[cull_mode % 4],
                                    SCREEN_INFO_COL_1, nextrow++);
 
-            font_tex_render_string(cull_mode_tex, "cull bias:",
+            font_tex_render_string(white_font_tex, "cull bias:",
                                    SCREEN_INFO_COL_0, nextrow);
             snprintf(tmpstr, sizeof(tmpstr) - 1, "%.02f",
                      (double)cull_tolerance);
