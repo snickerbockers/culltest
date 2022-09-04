@@ -286,9 +286,11 @@ int main(int argc, char **argv) {
                 verts[3].x * (verts[1].y - verts[2].y);
         }
 
+#if 0 // force users to always draw the second triangle
         if (btn_y && !btn_y_prev)
             draw_extra_tri = !draw_extra_tri;
         btn_y_prev = btn_y;
+#endif
 
         if (btn_x && !btn_x_prev)
             cur_screen = (cur_screen + 1) % N_SCREENS;
