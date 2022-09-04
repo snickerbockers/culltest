@@ -55,7 +55,7 @@ static void rot_mat(float mat[16], float pitch, float yaw, float roll) {
 
 enum screen_mode {
     SCREEN_3D,
-    SCREEN_INFO,
+    SCREEN_STATUS,
 
     N_SCREENS
 };
@@ -71,11 +71,16 @@ enum option_selection {
 #define SCREEN_TEXT_WIDTH (640 / GLYPH_WIDTH)
 #define SCREEN_TEXT_HEIGHT (480 / GLYPH_HEIGHT)
 
-#define SCREEN_INFO_COL_0 (SCREEN_TEXT_WIDTH / 4)
-#define SCREEN_INFO_COL_1 (2 * SCREEN_TEXT_WIDTH / 4)
+#define SCREEN_STATUS_COL_0 (SCREEN_TEXT_WIDTH / 4)
+#define SCREEN_STATUS_COL_1 (2 * SCREEN_TEXT_WIDTH / 4)
+
+static void center_text(pvr_ptr_t tex, char const *msg, unsigned row) {
+    font_tex_render_string(tex, msg,
+                           (SCREEN_TEXT_WIDTH - strlen(msg)) / 2, row);
+}
 
 int main(int argc, char **argv) {
-    bool draw_extra_tri = false;
+    bool draw_extra_tri = true;
     enum screen_mode cur_screen = SCREEN_3D;
 
     pvr_init(&pvr_params);
@@ -224,7 +229,7 @@ int main(int argc, char **argv) {
                 translation[0] += delta[0];
                 translation[1] += delta[1];
                 translation[2] += delta[2];
-            } else if (cur_screen == SCREEN_INFO) {
+            } else if (cur_screen == SCREEN_STATUS) {
                 if (down && !down_prev) {
                     if (opt_sel < OPT_SEL_CULL_LEN - 1)
                         opt_sel++;
@@ -332,7 +337,7 @@ int main(int argc, char **argv) {
             for (idx = 0; idx < n_verts; idx++)
                 pvr_prim(verts + idx, sizeof(verts[idx]));
 
-            int nextrow = 0;
+            int nextrow = 1;
             font_tex_render_string(white_font_tex, "culltest", 0, nextrow++);
 
             char tmpstr[64] = { 0 };
@@ -353,53 +358,70 @@ int main(int argc, char **argv) {
                 font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
             }
 
+            center_text(white_font_tex, "TRANSLATE WITH D-PAD, A AND B",
+                        SCREEN_TEXT_HEIGHT - 5);
+            center_text(white_font_tex, "ROTATE WITH ANALOG STICK AND TRIGGERS",
+                        SCREEN_TEXT_HEIGHT - 4);
+            center_text(white_font_tex, "PRESS X TO ADJUST PARAMETERS",
+                        SCREEN_TEXT_HEIGHT - 3);
+            center_text(white_font_tex, "PRESS START TO EXIT",
+                        SCREEN_TEXT_HEIGHT - 2);
+
             pvr_list_finish();
         } else {
             pvr_list_begin(PVR_LIST_OP_POLY);
 
             char tmpstr[256] = { 0 };
 
-            font_tex_render_string(white_font_tex, "STATUS",
-                                   (SCREEN_TEXT_WIDTH - strlen("STATUS")) / 2, 1);
+            center_text(white_font_tex, "STATUS", 1);
 
             int nextrow = 3;
-            font_tex_render_string(white_font_tex, "v1:", SCREEN_INFO_COL_0, nextrow);
+            font_tex_render_string(white_font_tex, "v1:", SCREEN_STATUS_COL_0, nextrow);
             snprintf(tmpstr, sizeof(tmpstr) - 1, "(%.02f, %.02f, %.02f)\n",
                      (double)verts[0].x, (double)verts[0].y, (double)verts[0].z);
-            font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, SCREEN_STATUS_COL_1, nextrow++);
 
-            font_tex_render_string(white_font_tex, "v2:", SCREEN_INFO_COL_0, nextrow);
+            font_tex_render_string(white_font_tex, "v2:", SCREEN_STATUS_COL_0, nextrow);
             snprintf(tmpstr, sizeof(tmpstr) - 1, "(%.02f, %.02f, %.02f)\n",
                      (double)verts[1].x, (double)verts[1].y, (double)verts[1].z);
-            font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, SCREEN_STATUS_COL_1, nextrow++);
 
-            font_tex_render_string(white_font_tex, "v3:", SCREEN_INFO_COL_0, nextrow);
+            font_tex_render_string(white_font_tex, "v3:", SCREEN_STATUS_COL_0, nextrow);
             snprintf(tmpstr, sizeof(tmpstr) - 1, "(%.02f, %.02f, %.02f)\n",
                      (double)verts[2].x, (double)verts[2].y, (double)verts[2].z);
-            font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, SCREEN_STATUS_COL_1, nextrow++);
 
             if (draw_extra_tri) {
-                font_tex_render_string(white_font_tex, "v4:", SCREEN_INFO_COL_0, nextrow);
+                font_tex_render_string(white_font_tex, "v4:", SCREEN_STATUS_COL_0, nextrow);
                 snprintf(tmpstr, sizeof(tmpstr) - 1, "(%.02f, %.02f, %.02f)\n",
                          (double)verts[3].x, (double)verts[3].y, (double)verts[3].z);
-                font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
+                font_tex_render_string(white_font_tex, tmpstr, SCREEN_STATUS_COL_1, nextrow++);
             }
 
-            font_tex_render_string(white_font_tex, "rot:", SCREEN_INFO_COL_0, nextrow);
+            font_tex_render_string(white_font_tex, "rot:", SCREEN_STATUS_COL_0, nextrow);
             snprintf(tmpstr, sizeof(tmpstr) - 1, "(%.02f, %.02f, %.02f)\n",
                      (double)(pitch * 180.0f / M_PI),
                      (double)(yaw * 180.0f / M_PI),
                      (double)(roll * 180.0f / M_PI));
-            font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, SCREEN_STATUS_COL_1, nextrow++);
 
-            font_tex_render_string(white_font_tex, "det[0]:", SCREEN_INFO_COL_0, nextrow);
+            font_tex_render_string(white_font_tex, "det[0]:", SCREEN_STATUS_COL_0, nextrow);
             snprintf(tmpstr, sizeof(tmpstr) - 1, "%.02f\n", (double)det[0]);
-            font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, SCREEN_STATUS_COL_1, nextrow++);
             if (draw_extra_tri) {
-                font_tex_render_string(white_font_tex, "det[1]:", SCREEN_INFO_COL_0, nextrow);
+                font_tex_render_string(white_font_tex, "det[1]:", SCREEN_STATUS_COL_0, nextrow);
                 snprintf(tmpstr, sizeof(tmpstr) - 1, "%.02f\n", (double)det[1]);
-                font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
+                font_tex_render_string(white_font_tex, tmpstr, SCREEN_STATUS_COL_1, nextrow++);
             }
+
+            nextrow++;
+            center_text(white_font_tex,
+                        "MOVE THE CURSOR BY PRESSING UP/DOWN ON THE D-PAD",
+                        nextrow++);
+            center_text(white_font_tex,
+                        "TO ADJUST THE VALUE, PRESS LEFT/RIGHT ON THE D-PAD",
+                        nextrow++);
+            nextrow++;
 
             pvr_ptr_t cull_mode_tex = (opt_sel == OPT_SEL_CULL_MODE ?
                                        blue_font_tex : white_font_tex);
@@ -407,17 +429,22 @@ int main(int argc, char **argv) {
                                             blue_font_tex : white_font_tex);
 
             font_tex_render_string(white_font_tex, "cull mode:",
-                                   SCREEN_INFO_COL_0, nextrow);
+                                   SCREEN_STATUS_COL_0, nextrow);
             font_tex_render_string(cull_mode_tex,
                                    cull_mode_names[cull_mode % 4],
-                                   SCREEN_INFO_COL_1, nextrow++);
+                                   SCREEN_STATUS_COL_1, nextrow++);
 
             font_tex_render_string(white_font_tex, "cull bias:",
-                                   SCREEN_INFO_COL_0, nextrow);
+                                   SCREEN_STATUS_COL_0, nextrow);
             snprintf(tmpstr, sizeof(tmpstr) - 1, "%.02f",
                      (double)cull_tolerance);
             font_tex_render_string(cull_tolerance_tex,
-                                   tmpstr, SCREEN_INFO_COL_1, nextrow++);
+                                   tmpstr, SCREEN_STATUS_COL_1, nextrow++);
+
+            center_text(white_font_tex, "PRESS X TO RETURN TO THE 3D VIEW",
+                        SCREEN_TEXT_HEIGHT - 3);
+            center_text(white_font_tex, "PRESS START TO EXIT",
+                        SCREEN_TEXT_HEIGHT - 2);
 
             pvr_list_finish();
         }
