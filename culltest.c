@@ -67,6 +67,13 @@ enum option_selection {
     OPT_SEL_CULL_LEN
 };
 
+// number of characters that can fit in the screen
+#define SCREEN_TEXT_WIDTH (640 / GLYPH_WIDTH)
+#define SCREEN_TEXT_HEIGHT (480 / GLYPH_HEIGHT)
+
+#define SCREEN_INFO_COL_0 (SCREEN_TEXT_WIDTH / 4)
+#define SCREEN_INFO_COL_1 (2 * SCREEN_TEXT_WIDTH / 4)
+
 int main(int argc, char **argv) {
     bool draw_extra_tri = false;
     enum screen_mode cur_screen = SCREEN_3D;
@@ -347,51 +354,64 @@ int main(int argc, char **argv) {
             char tmpstr[256] = { 0 };
 
             font_tex_render_string(white_font_tex, "STATUS",
-                                   (FONT_TEX_N_COL - strlen("STATUS")) / 2, 1);
+                                   (SCREEN_TEXT_WIDTH - strlen("STATUS")) / 2, 1);
 
             int nextrow = 3;
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "v1: (%.02f, %.02f, %.02f)\n",
+            font_tex_render_string(white_font_tex, "v1:", SCREEN_INFO_COL_0, nextrow);
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "(%.02f, %.02f, %.02f)\n",
                      (double)verts[0].x, (double)verts[0].y, (double)verts[0].z);
-            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
 
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "v2: (%.02f, %.02f, %.02f)\n",
+            font_tex_render_string(white_font_tex, "v2:", SCREEN_INFO_COL_0, nextrow);
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "(%.02f, %.02f, %.02f)\n",
                      (double)verts[1].x, (double)verts[1].y, (double)verts[1].z);
-            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
 
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "v3: (%.02f, %.02f, %.02f)\n",
+            font_tex_render_string(white_font_tex, "v3:", SCREEN_INFO_COL_0, nextrow);
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "(%.02f, %.02f, %.02f)\n",
                      (double)verts[2].x, (double)verts[2].y, (double)verts[2].z);
-            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
 
             if (draw_extra_tri) {
-                snprintf(tmpstr, sizeof(tmpstr) - 1, "v4: (%.02f, %.02f, %.02f)\n",
+                font_tex_render_string(white_font_tex, "v4:", SCREEN_INFO_COL_0, nextrow);
+                snprintf(tmpstr, sizeof(tmpstr) - 1, "(%.02f, %.02f, %.02f)\n",
                          (double)verts[3].x, (double)verts[3].y, (double)verts[3].z);
-                font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+                font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
             }
 
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "rot: (%.02f, %.02f, %.02f)\n",
+            font_tex_render_string(white_font_tex, "rot:", SCREEN_INFO_COL_0, nextrow);
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "(%.02f, %.02f, %.02f)\n",
                      (double)(pitch * 180.0f / M_PI),
                      (double)(yaw * 180.0f / M_PI),
                      (double)(roll * 180.0f / M_PI));
-            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
 
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "det[0]: %.02f\n", (double)det[0]);
-            font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+            font_tex_render_string(white_font_tex, "det[0]:", SCREEN_INFO_COL_0, nextrow);
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "%.02f\n", (double)det[0]);
+            font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
             if (draw_extra_tri) {
-                snprintf(tmpstr, sizeof(tmpstr) - 1, "det[1]: %.02f\n", (double)det[1]);
-                font_tex_render_string(white_font_tex, tmpstr, 0, nextrow++);
+                font_tex_render_string(white_font_tex, "det[1]:", SCREEN_INFO_COL_0, nextrow);
+                snprintf(tmpstr, sizeof(tmpstr) - 1, "%.02f\n", (double)det[1]);
+                font_tex_render_string(white_font_tex, tmpstr, SCREEN_INFO_COL_1, nextrow++);
             }
 
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "cull mode: %s",
-                     cull_mode_names[cull_mode % 4]);
-            font_tex_render_string(opt_sel == OPT_SEL_CULL_MODE ?
-                                   blue_font_tex : white_font_tex,
-                                   tmpstr, 0, nextrow++);
+            pvr_ptr_t cull_mode_tex = (opt_sel == OPT_SEL_CULL_MODE ?
+                                       blue_font_tex : white_font_tex);
+            pvr_ptr_t cull_tolerance_tex = (opt_sel == OPT_SEL_CULL_VAL ?
+                                            blue_font_tex : white_font_tex);
 
-            snprintf(tmpstr, sizeof(tmpstr) - 1, "cull tolerance: %.02f",
+            font_tex_render_string(cull_mode_tex, "cull mode:",
+                                   SCREEN_INFO_COL_0, nextrow);
+            font_tex_render_string(cull_mode_tex,
+                                   cull_mode_names[cull_mode % 4],
+                                   SCREEN_INFO_COL_1, nextrow++);
+
+            font_tex_render_string(cull_mode_tex, "cull bias:",
+                                   SCREEN_INFO_COL_0, nextrow);
+            snprintf(tmpstr, sizeof(tmpstr) - 1, "%.02f",
                      (double)cull_tolerance);
-            font_tex_render_string(opt_sel == OPT_SEL_CULL_VAL ?
-                                   blue_font_tex : white_font_tex,
-                                   tmpstr, 0, nextrow++);
+            font_tex_render_string(cull_tolerance_tex,
+                                   tmpstr, SCREEN_INFO_COL_1, nextrow++);
 
             pvr_list_finish();
         }
