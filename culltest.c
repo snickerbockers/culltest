@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
     int last_vbl_count = -1;
     printf("done initializing\n");
     bool btn_y_prev = false, btn_x_prev = false, up_prev = false,
-        down_prev = false, a_prev = false;
+        down_prev = false, left_prev = false, right_prev = false;
     float pitch = 0.0f, yaw = 0.0f, roll = 0.0f;
     int cull_mode = PVR_CULLING_NONE;
     enum option_selection opt_sel = OPT_SEL_CULL_MODE;
@@ -225,29 +225,33 @@ int main(int argc, char **argv) {
                 translation[1] += delta[1];
                 translation[2] += delta[2];
             } else if (cur_screen == SCREEN_INFO) {
-                if (btn_a && !a_prev)
-                    opt_sel = (opt_sel + 1) % OPT_SEL_CULL_LEN;
+                if (down && !down_prev) {
+                    if (opt_sel < OPT_SEL_CULL_LEN - 1)
+                        opt_sel++;
+                }
+                if (up && !up_prev) {
+                    if (opt_sel > 0)
+                        opt_sel--;
+                }
+
 
                 if (opt_sel == OPT_SEL_CULL_MODE) {
-                    if (up && !up_prev)
-                        cull_mode = (cull_mode + 1) % 4;
-
-                    if (down && !down_prev) {
-                        cull_mode = cull_mode - 1;
-                        if (cull_mode < 0)
-                            cull_mode = 3;
-                    }
+                    if (right && !right_prev)
+                        cull_mode = (cull_mode + 1) & 3;
+                    if (left && !left_prev)
+                        cull_mode = (cull_mode - 1) & 3;
                 } else if (opt_sel == OPT_SEL_CULL_VAL) {
-                    if (up && !up_prev)
+                    if (right && !right_prev)
                         cull_tolerance += 100.0f;
-                    if (down && !down_prev)
+                    if (left && !left_prev)
                         cull_tolerance -= 100.0f;
                 }
             }
 
-            a_prev = btn_a;
             up_prev = up;
             down_prev = down;
+            right_prev = right;
+            left_prev = left;
 
             float mview_mat[16], rotation_mat[16], translation_mat[16];
             rot_mat(rotation_mat, pitch, yaw, roll);
