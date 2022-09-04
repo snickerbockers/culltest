@@ -1,0 +1,33 @@
+#+CAPTION: culltest
+
+* culltest
+
+** PURPOSE
+culltest is a simple program for testing the PowerVR2's back-facing
+polygon culling on SEGA Dreamcast to test conformity between real
+hardware and emulation platforms.
+
+** USAGE
+
+| button        | function                                           |
+|---------------+----------------------------------------------------|
+| analog stick  | pitch and yaw the polygon                          |
+| left-trigger  | roll the polygon                                   |
+| right-trigger | roll the polygon                                   |
+| d-pad         | translate the polygon on the x/y plane             |
+| a-button      | translate the polygon closer to the focal point    |
+| b-button      | translate the polygon away from the focal point    |
+| x-button      | switch between the 3d screen and the status screen |
+| start-button  | exit to bootloader                                 |
+
+The polygon culling function and the bias parameter (0x5f8078) can be adjusted
+from the status screen.
+
+** COMPILING
+The program can be built with the included Makefile.  [[https://github.com/KallistiOS/KallistiOS][KallistiOS]] is
+required as a pre-requisite.
+
+** LICENSE
+This software is licensed under the terms of the GNU GPL.  Because it
+is dependent on KallistiOS, any binary distributions are also bound by
+the terms of KallistiOS' license.
