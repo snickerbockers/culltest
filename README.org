@@ -28,6 +28,10 @@ The program can be built with the included Makefile.  [[https://github.com/Kalli
 required as a pre-requisite.
 
 ** LICENSE
-This software is licensed under the terms of the GNU GPL.  Because it
-is dependent on KallistiOS, any binary distributions are also bound by
-the terms of KallistiOS' license.
+copyright snickerbockers, 2022
+
+This software is licensed under the terms of the GNU GPL.  The terms
+of this license can be found in the included file named COPYING.
+
+Because it is dependent on KallistiOS, any binary distributions are
+also bound by the terms of KallistiOS' license.
